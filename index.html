@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GSIA MOTO PILOT</title>
+<style>
+body{background:#0a140f;color:white;font-family:Arial;text-align:center;margin:0;padding:10px}
+h1{color:#FFD700;margin:5px} .sub{font-size:13px;opacity:.8}
+#road{width:100%;max-width:420px;height:300px;background:#1e2e26;border:2px solid #FFD700;border-radius:12px;margin:10px auto;position:relative;overflow:hidden}
+#roadLine{position:absolute;left:50%;top:0;width:3px;height:100%;background:white}
+#moto{position:absolute;left:45%;top:200px;font-size:48px;transition:.3s;transform:rotate(0deg)}
+#infos{background:#1a2a20;padding:10px;border-radius:10px;max-width:420px;margin:auto}
+button{width:45%;padding:14px;margin:5px;border:none;border-radius:12px;font-weight:bold;font-size:15px;color:white;cursor:pointer}
+.green{background:#00a651}.red{background:#d00000}.grey{background:#444}.orange{background:#e67e00}.blue{background:#007bff}
+#status{color:#FFD700;font-weight:bold;margin-top:8px}
+</style>
+</head>
+<body>
+<h1>GSIA MOTO PILOT 🛵</h1>
+<div class="sub">GSIA STUDIO - Tableau de bord - Simulation</div>
+
+<div id="road"><div id="roadLine"></div><div id="moto">🛵</div></div>
+
+<div id="infos">
+Vitesse : <span id="vit">0</span> km/h | GPS : Lomé -> Aného<br>
+Batterie : <span id="bat">100</span>% | Mode : <span id="mode">MANUEL</span>
+<div id="status">Moteur coupé - Appuie sur DEMARRER</div>
+</div>
+
+<br>
+<button class="green" onclick="demarrer()">DEMARRER</button>
+<button class="red" onclick="arreter()">ARRETER</button><br>
+<button class="grey" onclick="tourner(-20)">⬅ GAUCHE</button>
+<button class="grey" onclick="tourner(20)">DROITE ➡</button><br>
+<button class="orange" onclick="frein()">FREIN</button>
+<button class="blue" onclick="autoPilote()">AUTO-PILOTE : <span id="autoTxt">OFF</span></button>
+
+<p style="font-size:12px;opacity:.7">Conducteur : ASSIS - La moto roule seule<br>Simulation V1 - GSIA STUDIO - Lomé, Togo</p>
+
+<script>
+let x=45, vitesse=0, auto=false, started=false, angle=0;
+let moto=document.getElementById('moto');
+let interval;
+
+function demarrer(){
+  if(started) return; started=true;
+  document.getElementById('status').innerText="Moteur allumé - Prêt à rouler";
+  interval=setInterval(()=>{
+    if(auto){ vitesse=35; x+=Math.sin(Date.now()/800)*0.8; angle=Math.sin(Date.now()/800)*15; }
+    if(vitesse>0){ moto.style.top=(200 - (Date.now()%2000)/20)+'px'; }
+    if(moto.offsetTop<20) moto.style.top='200px';
+    moto.style.left=x+'%'; moto.style.transform='rotate('+angle+'deg)';
+    document.getElementById('vit').innerText=Math.round(vitesse);
+    let b=document.getElementById('bat'); if(vitesse>0 && parseInt(b.innerText)>0) b.innerText=parseInt(b.innerText)-0.1|0;
+  },100);
+}
+function arreter(){ started=false; auto=false; vitesse=0; clearInterval(interval); document.getElementById('status').innerText="Moteur coupé"; document.getElementById('autoTxt').innerText="OFF"; document.getElementById('mode').innerText="MANUEL"; }
+function frein(){ vitesse=0; document.getElementById('status').innerText="FREIN ! Moto arrêtée"; }
+function tourner(d){ x+=d/5; if(x<10)x=10; if(x>80)x=80; angle+=d; moto.style.left=x+'%'; moto.style.transform='rotate('+angle+'deg)'; }
+function autoPilote(){
+  if(!started){ alert("Démarre d'abord la moto DG !"); return; }
+  auto=!auto; vitesse=auto?35:0;
+  document.getElementById('autoTxt').innerText=auto?"ON":"OFF";
+  document.getElementById('mode').innerText=auto?"AUTO-PILOTE":"MANUEL";
+  document.getElementById('status').innerText=auto?"AUTO-PILOTE ACTIVÉ - La moto roule seule, conducteur assis":"Mode manuel";
+}
+</script>
+</body>
+</html>
