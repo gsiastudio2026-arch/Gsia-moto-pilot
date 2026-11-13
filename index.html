@@ -3,67 +3,100 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GSIA MOTO PILOT</title>
+<title>GSIA MOTO PILOT V2</title>
 <style>
-body{background:#0a140f;color:white;font-family:Arial;text-align:center;margin:0;padding:10px}
-h1{color:#FFD700;margin:5px} .sub{font-size:13px;opacity:.8}
-#road{width:100%;max-width:420px;height:300px;background:#1e2e26;border:2px solid #FFD700;border-radius:12px;margin:10px auto;position:relative;overflow:hidden}
-#roadLine{position:absolute;left:50%;top:0;width:3px;height:100%;background:white}
-#moto{position:absolute;left:45%;top:200px;font-size:48px;transition:.3s;transform:rotate(0deg)}
-#infos{background:#1a2a20;padding:10px;border-radius:10px;max-width:420px;margin:auto}
-button{width:45%;padding:14px;margin:5px;border:none;border-radius:12px;font-weight:bold;font-size:15px;color:white;cursor:pointer}
+body{background:#0a140f;color:#fff;font-family:Arial;text-align:center;margin:0;padding:10px}
+h1{color:#FFD700;margin:5px;font-size:26px}.sub{font-size:12px;opacity:.8}
+/* ROUTE LOME - ANEHO */
+#routeWrap{max-width:430px;margin:10px auto}
+#route{height:320px;background:#2b2b2b;border:3px solid #FFD700;border-radius:14px;position:relative;overflow:hidden}
+.accot{position:absolute;top:0;width:42px;height:100%;background:#c9a86a}
+.accot.l{left:0}.accot.r{right:0}
+.trot{position:absolute;top:0;width:10px;height:100%;background:#8a6d3b}
+.trot.l{left:42px}.trot.r{right:42px}
+#ligne{position:absolute;left:50%;top:-100%;width:6px;height:200%;background:repeating-linear-gradient(white 0 30px, transparent 30px 60px)}
+#motoBox{position:absolute;left:42%;top:200px;text-align:center;transition:.25s;z-index:5}
+#conducteur{font-size:30px;display:block;margin-bottom:-8px}
+#motoEmoji{font-size:52px;display:block}
+#panneau{position:absolute;top:8px;left:60px;background:#007bff;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:bold;z-index:6}
+#panneau2{position:absolute;top:8px;right:60px;background:#00a651;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:bold;z-index:6}
+#ville{font-size:12px;color:#FFD700;margin-top:4px}
+/* 6 MATERIELS */
+#modules{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;max-width:430px;margin:10px auto}
+.mod{background:#1a2a20;padding:8px 4px;border-radius:10px;font-size:11px;border:1px solid #333}
+.dot{width:10px;height:10px;border-radius:50%;background:red;display:inline-block;margin-right:4px}
+.dot.on{background:#00ff00;box-shadow:0 0 6px #00ff00}
+#infos{background:#1a2a20;padding:10px;border-radius:10px;max-width:430px;margin:auto}
+button{width:45%;padding:13px;margin:5px;border:none;border-radius:12px;font-weight:bold;font-size:15px;color:#fff}
 .green{background:#00a651}.red{background:#d00000}.grey{background:#444}.orange{background:#e67e00}.blue{background:#007bff}
-#status{color:#FFD700;font-weight:bold;margin-top:8px}
+#status{color:#FFD700;font-weight:bold;margin-top:6px}
 </style>
 </head>
 <body>
-<h1>GSIA MOTO PILOT 🛵</h1>
-<div class="sub">GSIA STUDIO - Tableau de bord - Simulation</div>
+<h1>GSIA MOTO PILOT 🛵 V2</h1>
+<div class="sub">GSIA STUDIO - Lomé -> Aného - Auto-Pilote</div>
 
-<div id="road"><div id="roadLine"></div><div id="moto">🛵</div></div>
+<div id="routeWrap">
+<div id="route">
+<div class="accot l"></div><div class="trot l"></div>
+<div class="accot r"></div><div class="trot r"></div>
+<div id="ligne"></div>
+<div id="panneau">📍 LOMÉ</div>
+<div id="panneau2">📍 ANÉHO ➡</div>
+<div id="motoBox"><span id="conducteur">🧑‍✈️</span><span id="motoEmoji">🛵</span></div>
+</div>
+<div id="ville">Accotement gauche | Route goudronnée | Accotement droit - La moto circule seule</div>
+</div>
+
+<div id="modules">
+<div class="mod"><span class="dot" id="d1"></span>1. ESP32<br>Cerveau</div>
+<div class="mod"><span class="dot" id="d2"></span>2. SERVO<br>Guidon</div>
+<div class="mod"><span class="dot" id="d3"></span>3. ACCEL / FREIN<br>Moteur</div>
+<div class="mod"><span class="dot" id="d4"></span>4. GPS<br>Lomé-Aného</div>
+<div class="mod"><span class="dot" id="d5"></span>5. GYROSCOPE<br>Équilibre</div>
+<div class="mod"><span class="dot" id="d6"></span>6. CAMÉRA<br>Route</div>
+</div>
 
 <div id="infos">
 Vitesse : <span id="vit">0</span> km/h | GPS : Lomé -> Aného<br>
 Batterie : <span id="bat">100</span>% | Mode : <span id="mode">MANUEL</span>
 <div id="status">Moteur coupé - Appuie sur DEMARRER</div>
+<div style="font-size:12px;margin-top:4px">Conducteur : 🧑‍✈️ ASSIS - Il ne conduit pas, la moto le conduit</div>
 </div>
 
 <br>
 <button class="green" onclick="demarrer()">DEMARRER</button>
 <button class="red" onclick="arreter()">ARRETER</button><br>
-<button class="grey" onclick="tourner(-20)">⬅ GAUCHE</button>
-<button class="grey" onclick="tourner(20)">DROITE ➡</button><br>
+<button class="grey" onclick="tourner(-12)">⬅ GAUCHE</button>
+<button class="grey" onclick="tourner(12)">DROITE ➡</button><br>
 <button class="orange" onclick="frein()">FREIN</button>
 <button class="blue" onclick="autoPilote()">AUTO-PILOTE : <span id="autoTxt">OFF</span></button>
-
-<p style="font-size:12px;opacity:.7">Conducteur : ASSIS - La moto roule seule<br>Simulation V1 - GSIA STUDIO - Lomé, Togo</p>
+<p style="font-size:11px;opacity:.6">Simulation V2 - GSIA STUDIO - Lomé, Togo - Prototype, pas sur vraie route</p>
 
 <script>
-let x=45, vitesse=0, auto=false, started=false, angle=0;
-let moto=document.getElementById('moto');
+let x=42, vitesse=0, auto=false, started=false, angle=0, pos=0;
+let box=document.getElementById('motoBox'), ligne=document.getElementById('ligne');
 let interval;
-
+function setDots(on){ for(let i=1;i<=6;i++){ document.getElementById('d'+i).className='dot'+(on?' on':''); } }
 function demarrer(){
-  if(started) return; started=true;
-  document.getElementById('status').innerText="Moteur allumé - Prêt à rouler";
-  interval=setInterval(()=>{
-    if(auto){ vitesse=35; x+=Math.sin(Date.now()/800)*0.8; angle=Math.sin(Date.now()/800)*15; }
-    if(vitesse>0){ moto.style.top=(200 - (Date.now()%2000)/20)+'px'; }
-    if(moto.offsetTop<20) moto.style.top='200px';
-    moto.style.left=x+'%'; moto.style.transform='rotate('+angle+'deg)';
-    document.getElementById('vit').innerText=Math.round(vitesse);
-    let b=document.getElementById('bat'); if(vitesse>0 && parseInt(b.innerText)>0) b.innerText=parseInt(b.innerText)-0.1|0;
-  },100);
+ if(started) return; started=true; setDots(true);
+ document.getElementById('status').innerText="6 matériels activés - Moteur allumé";
+ interval=setInterval(()=>{
+   if(auto){ vitesse=35; x=42+Math.sin(Date.now()/900)*12; angle=Math.sin(Date.now()/900)*12; }
+   if(vitesse>0){ pos+=vitesse/8; ligne.style.top=(-100 + (pos%60))+'%'; box.style.top=(190+Math.sin(Date.now()/300)*3)+'px'; }
+   box.style.left=x+'%'; box.style.transform='rotate('+angle+'deg)';
+   document.getElementById('vit').innerText=Math.round(vitesse);
+ },100);
 }
-function arreter(){ started=false; auto=false; vitesse=0; clearInterval(interval); document.getElementById('status').innerText="Moteur coupé"; document.getElementById('autoTxt').innerText="OFF"; document.getElementById('mode').innerText="MANUEL"; }
-function frein(){ vitesse=0; document.getElementById('status').innerText="FREIN ! Moto arrêtée"; }
-function tourner(d){ x+=d/5; if(x<10)x=10; if(x>80)x=80; angle+=d; moto.style.left=x+'%'; moto.style.transform='rotate('+angle+'deg)'; }
+function arreter(){ started=false; auto=false; vitesse=0; clearInterval(interval); setDots(false); document.getElementById('status').innerText="Moteur coupé - 6 matériels éteints"; document.getElementById('autoTxt').innerText="OFF"; document.getElementById('mode').innerText="MANUEL"; }
+function frein(){ vitesse=0; document.getElementById('status').innerText="FREIN ! Moto arrêtée, conducteur en sécurité"; }
+function tourner(d){ x+=d; if(x<18)x=18; if(x>68)x=68; angle+=d; box.style.left=x+'%'; box.style.transform='rotate('+angle+'deg)'; }
 function autoPilote(){
-  if(!started){ alert("Démarre d'abord la moto DG !"); return; }
-  auto=!auto; vitesse=auto?35:0;
-  document.getElementById('autoTxt').innerText=auto?"ON":"OFF";
-  document.getElementById('mode').innerText=auto?"AUTO-PILOTE":"MANUEL";
-  document.getElementById('status').innerText=auto?"AUTO-PILOTE ACTIVÉ - La moto roule seule, conducteur assis":"Mode manuel";
+ if(!started){ alert("Démarre d'abord DG !"); return; }
+ auto=!auto; vitesse=auto?35:0;
+ document.getElementById('autoTxt').innerText=auto?"ON":"OFF";
+ document.getElementById('mode').innerText=auto?"AUTO-PILOTE":"MANUEL";
+ document.getElementById('status').innerText=auto?"AUTO-PILOTE ON - Le conducteur est assis, la moto roule seule Lomé -> Aného":"Mode manuel - Tu conduis";
 }
 </script>
 </body>
