@@ -89,7 +89,12 @@ function demarrer(){
  },100);
 }
 function arreter(){ started=false; auto=false; vitesse=0; clearInterval(interval); setDots(false); document.getElementById('status').innerText="Moteur coupé - 6 matériels éteints"; document.getElementById('autoTxt').innerText="OFF"; document.getElementById('mode').innerText="MANUEL"; }
-function frein(){ vitesse=0; document.getElementById('status').innerText="FREIN ! Moto arrêtée, conducteur en sécurité"; }
+function frein(){ 
+  vitesse=0; auto=false;
+  document.getElementById('autoTxt').innerText="OFF";
+  document.getElementById('mode').innerText="MANUEL";
+  document.getElementById('status').innerText="FREIN ! Moto arrêtée, conducteur en sécurité - Appuie sur AUTO-PILOTE pour repartir"; 
+}
 function tourner(d){ x+=d; if(x<18)x=18; if(x>68)x=68; angle+=d; box.style.left=x+'%'; box.style.transform='rotate('+angle+'deg)'; }
 function autoPilote(){
  if(!started){ alert("Démarre d'abord DG !"); return; }
