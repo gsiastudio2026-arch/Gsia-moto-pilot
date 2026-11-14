@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GSIA MOTO PILOT V4</title>
+<title>GSIA MOTO PILOT V5 - FINALE</title>
 <style>
 body{background:#0a140f;color:#fff;font-family:Arial;text-align:center;margin:0;padding:10px}
 h1{color:#FFD700;margin:5px;font-size:26px}.sub{font-size:12px;opacity:.8}
@@ -15,6 +15,8 @@ h1{color:#FFD700;margin:5px;font-size:26px}.sub{font-size:12px;opacity:.8}
 #conducteur{font-size:30px;display:block;margin-bottom:-8px}
 #motoEmoji{font-size:52px;display:block}
 #voiture{position:absolute;left:55%;top:-80px;font-size:48px;z-index:4}
+#station{position:absolute;right:2px;top:80px;font-size:42px;z-index:4;display:none;text-align:center;background:#fff;border-radius:10px;padding:2px 4px}
+#station span{font-size:9px;color:#000;font-weight:bold;display:block}
 #panneau{position:absolute;top:8px;left:60px;background:#007bff;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:bold;z-index:6}
 #panneau2{position:absolute;top:8px;right:60px;background:#00a651;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:bold;z-index:6}
 #phareLight{position:absolute;top:200px;left:30%;width:120px;height:90px;background:radial-gradient(circle, rgba(255,255,150,.7), transparent 70%);display:none;z-index:3;border-radius:50%}
@@ -32,11 +34,12 @@ button{width:45%;padding:13px;margin:5px;border:none;border-radius:12px;font-wei
 .green{background:#00a651}.red{background:#d00000}.grey{background:#444}.orange{background:#e67e00}.blue{background:#007bff}.yellow{background:#FFD700;color:#000}.purple{background:#7b00ff}.teal{background:#00b8a9}
 #status{color:#FFD700;font-weight:bold;margin-top:6px}
 #alerte{color:#ff3333;font-weight:bold;display:none}
+#sonTxt{font-size:11px;color:#00ff00}
 </style>
 </head>
 <body>
-<h1>GSIA MOTO PILOT 🛵 V4</h1>
-<div class="sub">GSIA STUDIO - Lomé -> Aného - Score + Distance + Carburant</div>
+<h1>GSIA MOTO PILOT 🛵 V5</h1>
+<div class="sub">GSIA STUDIO - VERSION FINALE - Lomé -> Aného - Son Moteur + Station</div>
 
 <div id="route">
 <div class="accot l"></div><div class="trot l"></div>
@@ -45,6 +48,7 @@ button{width:45%;padding:13px;margin:5px;border:none;border-radius:12px;font-wei
 <div id="panneau">📍 LOMÉ</div>
 <div id="panneau2">📍 ANÉHO ➡</div>
 <div id="phareLight"></div>
+<div id="station">⛽<span>TOTAL<br>STATION</span></div>
 <div id="voiture">🚗</div>
 <div id="motoBox"><span id="conducteur">🧑‍✈️</span><span id="motoEmoji">🛵</span></div>
 </div>
@@ -55,6 +59,7 @@ button{width:45%;padding:13px;margin:5px;border:none;border-radius:12px;font-wei
 <div id="barreDist"><div id="barreDistFill"></div></div>
 ⛽ CARBURANT : <span id="carb">100</span>% <span id="carbMsg"></span>
 <div id="barreFond"><div id="barreCarb"></div></div>
+🔊 SON MOTEUR : <span id="sonTxt">COUPÉ</span> | ⛽ STATION : <span id="stationTxt">LOIN</span>
 </div>
 
 <div id="modules">
@@ -84,14 +89,16 @@ Batterie : <span id="bat">100</span>% | Mode : <span id="mode">MANUEL</span> | P
 <button class="yellow" onclick="klaxon()">📯 KLAXON</button>
 <button class="purple" onclick="togglePhare()">💡 PHARE : <span id="phareBtn">OFF</span></button><br>
 <button class="teal" onclick="fairePlein()">⛽ FAIRE LE PLEIN</button>
-<button class="teal" onclick="resetTrajet()">🔄 RECOMMENCER TRAJET</button>
-<p style="font-size:11px;opacity:.6">Simulation V4 - GSIA STUDIO - Lomé, Togo - Prototype, pas sur vraie route</p>
+<button class="teal" onclick="resetTrajet()">🔄 RECOMMENCER</button><br>
+<button class="grey" style="width:92%" onclick="toggleSon()">🔊 SON MOTEUR : <span id="sonBtn">ON</span></button>
+<p style="font-size:11px;opacity:.6">V5 FINALE - GSIA STUDIO - Lomé, Togo - Prototype, pas sur vraie route</p>
 
 <script>
 let x=42, vitesse=0, auto=false, started=false, angle=0, pos=0, voitureY=-80, phareOn=false;
-let score=0, dist=0, carb=100;
+let score=0, dist=0, carb=100, sonOn=true;
 let box=document.getElementById('motoBox'), ligne=document.getElementById('ligne'), voiture=document.getElementById('voiture');
 let interval, voitureInterval;
+let audioCtx=null, moteurOsc=null, moteurGain=null;
 function setDots(on){ for(let i=1;i<=6;i++){ document.getElementById('d'+i).className='dot'+(on?' on':''); } }
 function updateV4(){
  document.getElementById('score').innerText=score;
@@ -101,22 +108,48 @@ function updateV4(){
  document.getElementById('barreCarb').style.width=carb+'%';
  document.getElementById('barreCarb').style.background=carb>50?'#00ff00':carb>20?'orange':'red';
  document.getElementById('carbMsg').innerText=carb<=20 && carb>0 ? '⚠️ Va à la station !' : carb<=0 ? '🛑 Plus d\'essence !' : '';
+ // Station apparaît quand carburant bas
+ if(carb<=30){
+   document.getElementById('station').style.display='block';
+   document.getElementById('stationTxt').innerText='ICI ->';
+   document.getElementById('stationTxt').style.color='#FFD700';
+ } else {
+   document.getElementById('station').style.display='none';
+   document.getElementById('stationTxt').innerText='LOIN';
+   document.getElementById('stationTxt').style.color='#fff';
+ }
+}
+function startMoteur(){
+ if(!sonOn) return;
+ try{
+   if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+   if(moteurOsc) return;
+   moteurOsc=audioCtx.createOscillator(); moteurOsc.type='sawtooth'; moteurOsc.frequency.value=60;
+   moteurGain=audioCtx.createGain(); moteurGain.gain.value=0.05;
+   moteurOsc.connect(moteurGain); moteurGain.connect(audioCtx.destination); moteurOsc.start();
+   document.getElementById('sonTxt').innerText='VROUM VROUM 🔊';
+ }catch(e){}
+}
+function stopMoteur(){
+ try{ if(moteurOsc){ moteurOsc.stop(); moteurOsc=null; } }catch(e){}
+ document.getElementById('sonTxt').innerText='COUPÉ';
 }
 function demarrer(){
  if(started) return; started=true; setDots(true);
- document.getElementById('status').innerText="6 matériels activés - Moteur allumé";
+ document.getElementById('status').innerText="6 matériels activés - Moteur allumé VROUM !";
+ startMoteur();
  interval=setInterval(()=>{
    if(auto){ vitesse=35; x=42+Math.sin(Date.now()/900)*8; angle=Math.sin(Date.now()/900)*8; }
    if(vitesse>0){
      pos+=vitesse/8; ligne.style.top=(-100 + (pos%60))+'%';
      box.style.top=(190+Math.sin(Date.now()/300)*3)+'px';
-     // V4 : distance et carburant
-     dist += vitesse/3600*0.5; // avance vite pour démo
-     carb -= 0.05;
-     if(carb<=0){ carb=0; vitesse=0; auto=false; document.getElementById('status').innerText="🛑 PLUS D'ESSENCE ! Appuie sur FAIRE LE PLEIN"; document.getElementById('autoTxt').innerText="OFF"; document.getElementById('mode').innerText="MANUEL"; }
-     if(dist>=45){ dist=45; vitesse=0; auto=false; score+=100; document.getElementById('status').innerText="🎉 ARRIVÉ À ANÉHO ! +100 points ! Bravo DG !"; document.getElementById('autoTxt').innerText="OFF"; document.getElementById('mode').innerText="ARRIVÉ"; }
+     dist += vitesse/3600*0.5; carb -= 0.05;
+     // Son moteur varie avec vitesse
+     if(moteurOsc) moteurOsc.frequency.value=60 + vitesse;
+     if(carb<=0){ carb=0; vitesse=0; auto=false; stopMoteur(); document.getElementById('status').innerText="🛑 PLUS D'ESSENCE ! La station est là -> Appuie sur FAIRE LE PLEIN"; document.getElementById('autoTxt').innerText="OFF"; document.getElementById('mode').innerText="MANUEL"; }
+     if(dist>=45){ dist=45; vitesse=0; auto=false; score+=100; stopMoteur(); document.getElementById('status').innerText="🎉 ARRIVÉ À ANÉHO ! +100 points ! Bravo DG !"; document.getElementById('autoTxt').innerText="OFF"; document.getElementById('mode').innerText="ARRIVÉ"; }
      updateV4();
-   }
+   } else { if(moteurOsc) moteurOsc.frequency.value=60; }
    box.style.left=x+'%'; box.style.transform='rotate('+angle+'deg)';
    document.getElementById('vit').innerText=Math.round(vitesse);
  },100);
@@ -139,17 +172,18 @@ function demarrer(){
    },50);
  },9000);
 }
-function arreter(){ started=false; auto=false; vitesse=0; clearInterval(interval); clearInterval(voitureInterval); setDots(false); document.getElementById('alerte').style.display='none'; document.getElementById('status').innerText="Moteur coupé - 6 matériels éteints"; document.getElementById('autoTxt').innerText="OFF"; document.getElementById('mode').innerText="MANUEL"; }
-function frein(){ vitesse=0; auto=false; document.getElementById('autoTxt').innerText="OFF"; document.getElementById('mode').innerText="MANUEL"; document.getElementById('alerte').style.display='none'; document.getElementById('status').innerText="FREIN ! Moto arrêtée, conducteur en sécurité - Appuie sur AUTO-PILOTE pour repartir"; }
+function arreter(){ started=false; auto=false; vitesse=0; clearInterval(interval); clearInterval(voitureInterval); stopMoteur(); setDots(false); document.getElementById('alerte').style.display='none'; document.getElementById('status').innerText="Moteur coupé - 6 matériels éteints"; document.getElementById('autoTxt').innerText="OFF"; document.getElementById('mode').innerText="MANUEL"; }
+function frein(){ vitesse=0; auto=false; if(moteurOsc) moteurOsc.frequency.value=60; document.getElementById('autoTxt').innerText="OFF"; document.getElementById('mode').innerText="MANUEL"; document.getElementById('alerte').style.display='none'; document.getElementById('status').innerText="FREIN ! Moto arrêtée, conducteur en sécurité - Appuie sur AUTO-PILOTE pour repartir"; }
 function tourner(d){ x+=d; if(x<18)x=18; if(x>68)x=68; angle+=d; box.style.left=x+'%'; box.style.transform='rotate('+angle+'deg)'; }
 function autoPilote(){
  if(!started){ alert("Démarre d'abord DG !"); return; }
- if(carb<=0){ alert("Plus d'essence ! Fais le plein d'abord !"); return; }
- if(dist>=45){ alert("Tu es déjà arrivé à Aného ! Appuie sur RECOMMENCER TRAJET"); return; }
+ if(carb<=0){ alert("Plus d'essence ! La station est à droite, appuie sur FAIRE LE PLEIN !"); return; }
+ if(dist>=45){ alert("Tu es déjà arrivé à Aného ! Appuie sur RECOMMENCER"); return; }
  auto=!auto; vitesse=auto?35:0;
+ if(auto) startMoteur();
  document.getElementById('autoTxt').innerText=auto?"ON":"OFF";
  document.getElementById('mode').innerText=auto?"AUTO-PILOTE":"MANUEL";
- document.getElementById('status').innerText=auto?"AUTO-PILOTE ON - Le conducteur est assis, la moto roule seule Lomé -> Aného":"Mode manuel - Tu conduis";
+ document.getElementById('status').innerText=auto?"AUTO-PILOTE ON - VROUM ! Le conducteur est assis, la moto roule seule":"Mode manuel - Tu conduis";
 }
 function klaxon(){
  try{ let ctx=new (window.AudioContext||window.webkitAudioContext)(); let o=ctx.createOscillator(); o.type='square'; o.frequency.value=400; let g=ctx.createGain(); g.gain.value=0.2; o.connect(g); g.connect(ctx.destination); o.start(); setTimeout(()=>o.stop(),250); }catch(e){}
@@ -163,9 +197,21 @@ function togglePhare(){
  document.getElementById('route').style.background=phareOn?'#1a1a2a':'#2b2b2b';
  document.getElementById('status').innerText=phareOn?"💡 PHARE ALLUMÉ - On voit la route la nuit Lomé-Aného":"💡 PHARE ÉTEINT";
 }
-function fairePlein(){ carb=100; updateV4(); document.getElementById('status').innerText="⛽ PLEIN FAIT ! Carburant 100% - Tu peux repartir DG !"; }
+function fairePlein(){
+ if(carb>90){ alert("Ton réservoir est déjà plein DG !"); return; }
+ carb=100; updateV4();
+ document.getElementById('status').innerText="⛽ PLEIN FAIT À LA STATION TOTAL ! Carburant 100% - Merci, bonne route DG !";
+ // Petit son de plein
+ try{ let ctx=new (window.AudioContext||window.webkitAudioContext)(); let o=ctx.createOscillator(); o.frequency.value=800; let g=ctx.createGain(); g.gain.value=0.15; o.connect(g); g.connect(ctx.destination); o.start(); setTimeout(()=>o.stop(),400); }catch(e){}
+}
 function resetTrajet(){ dist=0; score=0; carb=100; vitesse=0; auto=false; updateV4(); document.getElementById('status').innerText="🔄 Nouveau trajet Lomé -> Aného - Score remis à 0 - Bonne route DG !"; document.getElementById('autoTxt').innerText="OFF"; document.getElementById('mode').innerText="MANUEL"; }
+function toggleSon(){
+ sonOn=!sonOn;
+ document.getElementById('sonBtn').innerText=sonOn?"ON":"OFF";
+ if(!sonOn) stopMoteur(); else if(started && vitesse>0) startMoteur();
+ document.getElementById('status').innerText=sonOn?"🔊 SON MOTEUR ACTIVÉ - VROUM VROUM":"🔇 SON MOTEUR COUPÉ";
+}
 updateV4();
 </script>
 </body>
-</html>
+ </html>
